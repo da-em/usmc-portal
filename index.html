@@ -20,7 +20,6 @@ button:hover { background:#2563eb; }
 .schedule-lesson { background:#1d4ed8; margin:2px 0; padding:2px 4px; border-radius:4px; font-size:12px; cursor:pointer; }
 .delete-btn { position:absolute; top:2px; right:2px; background:red; border:none; color:white; font-size:10px; border-radius:3px; cursor:pointer; }
 .chat-message { background:#1e40af; padding:4px; margin:2px 0; border-radius:4px; font-size:12px; word-wrap: break-word; }
-.friend-btn { background:#2563eb; color:white; padding:2px 4px; border-radius:4px; margin-left:5px; font-size:12px; cursor:pointer;}
 @media(max-width:768px){ .nav button{flex:100%;} .schedule-grid { grid-template-columns: repeat(1, 1fr); } }
 </style>
 </head>
@@ -40,7 +39,6 @@ button:hover { background:#2563eb; }
 <button onclick="show('dashboard')">Dashboard</button>
 <button onclick="show('schedule')">Schedule</button>
 <button onclick="show('grades')">Grades</button>
-<button onclick="show('attendance')">Attendance</button>
 <button onclick="show('chat')">Chat</button>
 <button onclick="show('trainer')" id="trainerBtn">Trainer Panel</button>
 <button onclick="show('admin')" id="adminBtn">Admin Panel</button>
@@ -50,15 +48,41 @@ button:hover { background:#2563eb; }
 <div id="dashboard" class="card"></div>
 <div id="schedule" class="card hidden"></div>
 <div id="grades" class="card hidden"></div>
-<div id="attendance" class="card hidden"></div>
 <div id="chat" class="card hidden"></div>
 <div id="trainer" class="card hidden"></div>
 <div id="admin" class="card hidden"></div>
 
 <script>
+// ------------------- Ranks -------------------
+const RANKS = [
+  {id: 1, name: "[RT] Recruit Training"},
+  {id: 2, name: "[E1] Private"},
+  {id: 3, name: "[E2] Private First Class"},
+  {id: 4, name: "[E3] Lance Corporal"},
+  {id: 5, name: "[E4] Corporal"},
+  {id: 6, name: "[E5] Sergeant"},
+  {id: 7, name: "[E6] Staff Sergeant"},
+  {id: 8, name: "[E7] Gunnery Sergeant"},
+  {id: 9, name: "[E8] Master Sergeant"},
+  {id:10, name: "[E8] First Sergeant"},
+  {id:11, name: "[E9] Master Gunnery Sergeant"},
+  {id:12, name: "[E9] Sergeant Major"},
+  {id:13, name: "[VIP] Very Important Person"},
+  {id:14, name: "[O1] Second Lieutenant"},
+  {id:15, name: "[O2] First Lieutenant"},
+  {id:16, name: "[O3] Captain"},
+  {id:17, name: "[O4] Major"},
+  {id:18, name: "[O5] Lieutenant Colonel"},
+  {id:19, name: "[O6] Colonel"},
+  {id:20, name: "[O7] Brigadier General"},
+  {id:21, name: "[O8] Major General"},
+  {id:22, name: "[O9] Lieutenant General"},
+  {id:23, name: "[O10] General"}
+];
+
 // ------------------- LocalStorage -------------------
 let users = JSON.parse(localStorage.getItem('users')) || {
-  "ADMIN60487753641": {password:"MARC60487753641", role:"Admin", robloxId:"60487753641", rank:"Commander", class:"HQ"}
+  "ADMIN60487753641": {password:"MARC60487753641", role:"Admin", robloxId:"60487753641", rank:23, rankName:"[O10] General", class:"HQ"}
 };
 let schedule = JSON.parse(localStorage.getItem('schedule')) || {};
 let grades = JSON.parse(localStorage.getItem('grades')) || {};
@@ -96,179 +120,91 @@ function loadUI(){
  document.getElementById('dashboard').innerHTML=`
  <h2>Welcome ${currentUser}</h2>
  <img class="avatar" src="https://www.roblox.com/headshot-thumbnail/image?userId=${u.robloxId}&width=150&height=150&format=png">
- <p>Rank: ${u.rank}</p>
+ <p>Rank: ${u.rankName}</p>
  <p>Role: ${u.role}</p>
  <p>Class: ${u.class}</p>`;
- displaySchedule();
- displayGrades();
- displayFriends();
  if(u.role!=='Admin') document.getElementById('adminBtn').style.display='none';
  if(u.role!=='Trainer') document.getElementById('trainerBtn').style.display='none';
  if(u.role==='Admin') loadAdmin();
  if(u.role==='Trainer') loadTrainerPanel();
 }
 
-// ------------------- Schedule -------------------
-let currentWeekMonday = new Date();
-currentWeekMonday.setDate(currentWeekMonday.getDate() - currentWeekMonday.getDay() + 1);
-
-function displaySchedule(){
- let u=users[currentUser];
- let regimentSchedule = schedule[u.class] || {};
- let html = `<h3>Week of ${currentWeekMonday.toDateString()}</h3>
- <button onclick="prevWeek()">Previous Week</button>
- <button onclick="nextWeek()">Next Week</button>
- <div class="schedule-grid">`;
- let days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
- days.forEach(day=>{
-   html+=`<div class="schedule-cell"><strong>${day}</strong>`;
-   let lessons = regimentSchedule[day]||[];
-   lessons.forEach((l,i)=>{
-     html+=`<div class="schedule-lesson">${l.trainingType} ${l.time}<br>Trainer: ${l.trainerUser} (${l.trainerRank})<br>Host: ${l.hostRole}<br>Location: ${l.location}`;
-     if(users[currentUser].role==='Admin' || l.trainerUser===currentUser) html+=`<button class="delete-btn" onclick="deleteLesson('${u.class}','${day}',${i})">x</button>`;
-     html+=`</div>`;
-   });
-   html+='</div>';
- });
- html+='</div>';
- document.getElementById('schedule').innerHTML=html;
-}
-function nextWeek(){ currentWeekMonday.setDate(currentWeekMonday.getDate()+7); displaySchedule(); }
-function prevWeek(){ currentWeekMonday.setDate(currentWeekMonday.getDate()-7); displaySchedule(); }
-function deleteLesson(cls, day, index){
- let lesson=schedule[cls][day][index];
- if(users[currentUser].role!=='Admin' && lesson.trainerUser!==currentUser) return;
- schedule[cls][day].splice(index,1);
- save();
- displaySchedule();
-}
-
-// ------------------- Grades -------------------
-function displayGrades(){
- let userGrades = grades[currentUser] || [];
- let html='<h2>Your Grades</h2>';
- userGrades.forEach(g=>{
-   html+=`<p>${g.title}: ${g.score} | Attendance: ${g.attendance} | Trainer: ${g.trainer}</p>`;
- });
- document.getElementById('grades').innerHTML=html;
-}
-
-// ------------------- Friends -------------------
-function displayFriends(){
- let userFriends = friends[currentUser] || [];
- let html='<h2>Friends</h2>';
- userFriends.forEach(f=>{
-   html+=`<p>${f} <button onclick="removeFriend('${f}')">Remove</button></p>`;
- });
- html+='<input id="addFriendInput" placeholder="Add friend"><button onclick="addFriend()">Add Friend</button>';
- document.getElementById('dashboard').innerHTML += html;
-}
-function addFriend(){
- let f=document.getElementById('addFriendInput').value;
- if(!friends[currentUser]) friends[currentUser]=[];
- if(!friends[currentUser].includes(f)) friends[currentUser].push(f);
- save(); displayFriends();
-}
-function removeFriend(f){
- friends[currentUser]=friends[currentUser].filter(x=>x!==f);
- save(); displayFriends();
-}
-
-// ------------------- Admin Panel -------------------
-function loadAdmin(){
- let userList = Object.keys(users).map(u=>`<p>${u} (${users[u].rank})</p>`).join('');
- document.getElementById('admin').innerHTML=`
- <h2>Admin Panel</h2>
- <h3>Create User</h3>
- <input id="newUser" placeholder="Username">
- <input id="newPass" placeholder="Password">
- <input id="newRoblox" placeholder="Roblox UserID">
- <select id="newRole"><option>Member</option><option>Trainer</option><option>Admin</option></select>
- <input id="newClass" placeholder="Class / Regiment">
- <button onclick="addUser()">Create User</button>
- <hr>
- <h3>Add Schedule</h3>
- <select id="scheduleRegiment"><option>HQ</option><option>TECOM</option></select>
- <select id="scheduleDay">
-   <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-   <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
- </select>
- <input id="trainingType" placeholder="Training Type">
- <input id="trainingTime" placeholder="Time (10:00-12:00)">
- <input id="trainerUser" placeholder="Trainer Username">
- <input id="trainerRank" placeholder="Trainer Rank">
- <select id="hostRole"><option>HOST</option><option>COHOST</option></select>
- <input id="location" placeholder="Location">
- <input id="extraInfo" placeholder="Extra Info">
- <button onclick="addSchedule()">Add Schedule</button>
- <hr>
- <h3>Existing Users</h3>${userList}`;
-}
-
-function addUser(){
- let newUser=document.getElementById('newUser').value;
- let newPass=document.getElementById('newPass').value;
- let newRoblox=document.getElementById('newRoblox').value;
- let newRole=document.getElementById('newRole').value;
- let newClass=document.getElementById('newClass').value;
- users[newUser]={password:newPass,robloxId:newRoblox,role:newRole,rank:1,class:newClass};
- save(); loadAdmin();
-}
-
-// ------------------- Schedule toevoegen -------------------
-function addSchedule(){
- let regiment=document.getElementById('scheduleRegiment').value;
- let day=document.getElementById('scheduleDay').value;
- if(!schedule[regiment]) schedule[regiment]={};
- if(!schedule[regiment][day]) schedule[regiment][day]=[];
- schedule[regiment][day].push({
-   trainingType:document.getElementById('trainingType').value,
-   time:document.getElementById('trainingTime').value,
-   trainerUser:document.getElementById('trainerUser').value,
-   trainerRank:document.getElementById('trainerRank').value,
-   hostRole:document.getElementById('hostRole').value,
-   location:document.getElementById('location').value,
-   extra:document.getElementById('extraInfo').value
- });
- save(); displaySchedule();
-}
-
-// ------------------- Trainer Panel -------------------
+// ------------------- Trainer Panel: Lookup + Rank -------------------
 function loadTrainerPanel(){
- let u=users[currentUser];
- let students=Object.keys(users).filter(s=>users[s].role==='Member' && users[s].class===u.class);
- let html='<h2>Trainer Panel</h2>';
- students.forEach(s=>{
-   html+=`<p>${s} - Current Rank: ${users[s].rank}</p>
-   <select id="rankSelect_${s}"><option value="200">Private</option><option value="300">Corporal</option><option value="400">Sergeant</option><option value="500">Lieutenant</option></select>
-   <button onclick="updateRank('${s}')">Update Rank</button><br>
-   <input id="gradeTitle_${s}" placeholder="Title">
-   <input id="gradeScore_${s}" placeholder="Score or Good/Bad">
-   <input type="checkbox" id="gradeAttendance_${s}">Present
-   <button onclick="addGrade('${s}')">Add Grade</button>`;
- });
+ let html = `<h2>Trainer Panel - Rank / Grades</h2>
+ <input id="lookupUser" placeholder="Enter username to lookup">
+ <button onclick="lookupUser()">Lookup</button>
+ <div id="lookupResult"></div>`;
  document.getElementById('trainer').innerHTML=html;
 }
 
-function updateRank(username){
- let student=users[username];
- let rankId=parseInt(document.getElementById(`rankSelect_${username}`).value);
- student.rank=rankId; save(); loadTrainerPanel(); alert(`${username} rank updated`);
+function lookupUser(){
+ let username = document.getElementById('lookupUser').value;
+ let u = users[username];
+ if(!u){ alert('User not found'); return; }
+
+ // Build rank dropdown
+ let rankDropdown = `<select id="newRankSelect">`;
+ RANKS.forEach(r=>{
+   rankDropdown += `<option value="${r.id}" ${u.rank===r.id?'selected':''}>${r.name}</option>`;
+ });
+ rankDropdown += `</select>`;
+
+ // Grades input
+ let gradeInput = `
+ <input id="gradeTitleInput" placeholder="Grade Title">
+ <input id="gradeScoreInput" placeholder="Score or Good/Bad">
+ <input type="checkbox" id="attendanceInput"> Present
+ <button onclick="addGrade('${username}')">Add Grade</button>`;
+
+ // Send to backend for Roblox group (placeholder fetch)
+ let rankBtn = `<button onclick="updateRobloxRank('${username}')">Update Roblox Rank</button>`;
+
+ document.getElementById('lookupResult').innerHTML = `
+ <p>Username: ${username}</p>
+ <p>Current Rank: ${u.rankName}</p>
+ <p>Class: ${u.class}</p>
+ <p>Change Rank: ${rankDropdown} ${rankBtn}</p>
+ ${gradeInput}`;
 }
 
+function updateRobloxRank(username){
+ let newRankId = parseInt(document.getElementById('newRankSelect').value);
+ let newRankName = RANKS.find(r=>r.id===newRankId).name;
+ users[username].rank = newRankId;
+ users[username].rankName = newRankName;
+ save();
+ alert(`${username} rank updated locally. Sending to Roblox group...`);
+
+ // Placeholder fetch to backend
+ fetch("http://localhost:3000/rank", {
+   method:"POST",
+   headers: {"Content-Type":"application/json"},
+   body: JSON.stringify({
+     robloxId: users[username].robloxId,
+     groupId:6048775,
+     rankId:newRankId
+   })
+ })
+ .then(res=>res.json())
+ .then(data=>alert("Rank updated in Roblox group successfully"))
+ .catch(err=>console.error("Error updating Roblox rank", err));
+}
+
+// ------------------- Grades -------------------
 function addGrade(username){
- let title=document.getElementById(`gradeTitle_${username}`).value;
- let score=document.getElementById(`gradeScore_${username}`).value;
- let attendance=document.getElementById(`gradeAttendance_${username}`).checked?'Present':'Absent';
+ let title = document.getElementById('gradeTitleInput').value;
+ let score = document.getElementById('gradeScoreInput').value;
+ let attendance = document.getElementById('attendanceInput').checked?'Present':'Absent';
  if(!grades[username]) grades[username]=[];
  grades[username].push({title, score, attendance, trainer:currentUser, date:new Date().toLocaleDateString()});
- save(); displayGrades();
+ save();
  alert(`Grade added for ${username}`);
 }
 
-// ------------------- Chat -------------------
-function sendMessage(to, content, type='private', image=null){
- messages.push({from:currentUser,to,content,type,date:new Date().toLocaleString(),image});
+// ------------------- Chat (Basic) -------------------
+function sendMessage(to, content, type='private'){
+ messages.push({from:currentUser,to,content,type,date:new Date().toLocaleString()});
  save();
  alert('Message sent');
 }

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>USMC Training Portal</title>
+<style>
+body { margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#e5e7eb; }
+header { background:#020617; padding:15px; text-align:center; font-weight:bold; }
+input, select, button, textarea { width:100%; padding:8px; margin:5px 0; border-radius:6px; border:none; }
+button { background:#1d4ed8; color:white; cursor:pointer; }
+button:hover { background:#2563eb; }
+.card { background:#020617; padding:15px; margin:10px 0; border-radius:10px; }
+.nav { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+.nav button { flex:1; }
+.hidden { display:none; }
+.avatar { width:80px; border-radius:50%; border:2px solid #1d4ed8; }
+@media(max-width:768px){ .nav button{flex:100%;} }
+</style>
+</head>
+<body>
+
+<header>USMC ROBLOX TRAINING SYSTEM</header>
+
+<div id="login" class="card">
+<h2>Login</h2>
+<input id="loginUser" placeholder="Username">
+<input id="loginPass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+
+<div id="app" class="hidden">
+<div class="nav">
+<button onclick="show('dashboard')">Dashboard</button>
+<button onclick="show('schedule')">Schedule</button>
+<button onclick="show('grades')">Grades</button>
+<button onclick="show('attendance')">Attendance</button>
+<button onclick="show('chat')">Chat</button>
+<button onclick="show('admin')" id="adminBtn">Admin Panel</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div id="dashboard" class="card"></div>
+<div id="schedule" class="card hidden"></div>
+<div id="grades" class="card hidden"></div>
+<div id="attendance" class="card hidden"></div>
+<div id="chat" class="card hidden"></div>
+<div id="admin" class="card hidden"></div>
+</div>
+
+<script>
+let users = JSON.parse(localStorage.getItem('users')) || {
+  "ADMIN60487753641": {password:"MARC60487753641", role:"Admin", robloxId:"60487753641", rank:"Commander", class:"HQ"}
+};
+let currentUser = null;
+function save(){ localStorage.setItem('users', JSON.stringify(users)); }
+
+function login(){
+ let u=document.getElementById('loginUser').value;
+ let p=document.getElementById('loginPass').value;
+ if(users[u] && users[u].password===p){
+   currentUser=u;
+   document.getElementById('login').classList.add('hidden');
+   document.getElementById('app').classList.remove('hidden');
+   loadUI();
+ } else alert('Invalid credentials');
+}
+function logout(){ location.reload(); }
+
+function show(id){
+ document.querySelectorAll('#app .card').forEach(c=>c.classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+}
+
+function loadUI(){
+ let u=users[currentUser];
+ document.getElementById('dashboard').innerHTML=`
+ <h2>Welcome ${currentUser}</h2>
+ <img class="avatar" src="https://www.roblox.com/headshot-thumbnail/image?userId=${u.robloxId}&width=150&height=150&format=png">
+ <p>Rank: ${u.rank}</p>
+ <p>Role: ${u.role}</p>
+ <p>Class: ${u.class}</p>`;
+ document.getElementById('schedule').innerHTML='<h2>Schedule</h2><p>Configured by Admin</p>';
+ document.getElementById('grades').innerHTML='<h2>Grades</h2><p>No grades yet</p>';
+ document.getElementById('attendance').innerHTML='<h2>Attendance</h2><p>100% Present</p>';
+ document.getElementById('chat').innerHTML='<h2>Chat</h2><textarea placeholder="Type message..."></textarea>';
+ if(u.role!=='Admin') document.getElementById('adminBtn').style.display='none';
+ else loadAdmin();
+}
+
+function loadAdmin(){
+ document.getElementById('admin').innerHTML=`
+ <h2>Admin Panel</h2>
+ <input id="newUser" placeholder="Username">
+ <input id="newPass" placeholder="Password">
+ <input id="newRoblox" placeholder="Roblox UserID">
+ <select id="newRole"><option>Member</option><option>Trainer</option><option>Admin</option></select>
+ <input id="newRank" placeholder="Rank">
+ <input id="newClass" placeholder="Class / Regiment">
+ <button onclick="addUser()">Create User</button>
+ <hr>
+ <h3>Existing Users</h3>
+ ${Object.keys(users).map(u=>`<p>${u} (${users[u].rank})</p>`).join('')}`;
+}
+function addUser(){
+ let u=document.getElementById('newUser').value;
+ users[u]={password:newPass.value, robloxId:newRoblox.value, role:newRole.value, rank:newRank.value, class:newClass.value};
+ save(); loadAdmin();
+}
+</script>
+</body>
+</html>

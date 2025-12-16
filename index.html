@@ -97,15 +97,37 @@ function loadAdmin(){
  <select id="newRole"><option>Member</option><option>Trainer</option><option>Admin</option></select>
  <input id="newRank" placeholder="Rank">
  <input id="newClass" placeholder="Class / Regiment">
- <button onclick="addUser()">Create User</button>
+ <button onclick="addUser()">Create User & Rank</button>
  <hr>
  <h3>Existing Users</h3>
  ${Object.keys(users).map(u=>`<p>${u} (${users[u].rank})</p>`).join('')}`;
 }
+
 function addUser(){
- let u=document.getElementById('newUser').value;
- users[u]={password:newPass.value, robloxId:newRoblox.value, role:newRole.value, rank:newRank.value, class:newClass.value};
- save(); loadAdmin();
+ let newUser = document.getElementById('newUser').value;
+ let newPass = document.getElementById('newPass').value;
+ let newRoblox = document.getElementById('newRoblox').value;
+ let newRole = document.getElementById('newRole').value;
+ let newRank = document.getElementById('newRank').value;
+ let newClass = document.getElementById('newClass').value;
+
+ users[newUser] = {password:newPass, robloxId:newRoblox, role:newRole, rank:newRank, class:newClass};
+ save(); 
+ loadAdmin();
+
+ // ---- HIER KOMT DE FETCH CALL ----
+ fetch("http://localhost:3000/rank", {
+   method: "POST",
+   headers: { "Content-Type": "application/json" },
+   body: JSON.stringify({
+     robloxId: newRoblox,
+     groupId: 6048775,   // <--- zet hier je Roblox Group ID
+     rankId: parseInt(newRank) || 200  // rankId moet een nummer zijn
+   })
+ })
+ .then(res=>res.json())
+ .then(data=>console.log("Rank updated:", data))
+ .catch(err=>console.error("Error updating rank:", err));
 }
 </script>
 </body>

@@ -5,22 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>USMC Training Portal</title>
 <style>
-body { margin:0; font-family:Arial, sans-serif; background:#0f172a; color:#e5e7eb; }
-header { background:#020617; padding:15px; text-align:center; font-weight:bold; }
-input, select, button, textarea { width:100%; padding:6px; margin:3px 0; border-radius:6px; border:none; }
-button { background:#1d4ed8; color:white; cursor:pointer; }
-button:hover { background:#2563eb; }
-.card { background:#020617; padding:15px; margin:10px; border-radius:10px; }
-.nav { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
-.nav button { flex:1; }
-.hidden { display:none; }
-.avatar { width:80px; border-radius:50%; border:2px solid #1d4ed8; }
-.schedule-grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; }
-.schedule-cell { background:#131b2b; padding:5px; border-radius:6px; min-height:50px; position:relative; }
-.schedule-lesson { background:#1d4ed8; margin:2px 0; padding:2px 4px; border-radius:4px; font-size:12px; cursor:pointer; }
-.delete-btn { position:absolute; top:2px; right:2px; background:red; border:none; color:white; font-size:10px; border-radius:3px; cursor:pointer; }
-.chat-message { background:#1e40af; padding:4px; margin:2px 0; border-radius:4px; font-size:12px; word-wrap: break-word; }
-@media(max-width:768px){ .nav button{flex:100%;} .schedule-grid { grid-template-columns: repeat(1, 1fr); } }
+:root{
+  --primary:#1d4ed8; --secondary:#0f172a; --card:#020617;
+  --text:#e5e7eb; --accent:#2563eb; --success:#10b981; --danger:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:Arial,sans-serif;background:var(--secondary);color:var(--text);}
+header{background:var(--card);padding:15px;text-align:center;font-weight:bold;font-size:1.5em;}
+.nav{display:flex;flex-wrap:wrap;gap:8px;margin:10px;}
+.nav button{flex:1;padding:8px;background:var(--primary);border:none;color:white;border-radius:6px;cursor:pointer;}
+.nav button:hover{background:var(--accent);}
+.card{background:var(--card);padding:15px;margin:10px;border-radius:10px;}
+.hidden{display:none;}
+input,select,button,textarea{width:100%;padding:6px;margin:4px 0;border-radius:6px;border:none;}
+button{cursor:pointer;}
+.avatar{width:80px;border-radius:50%;border:2px solid var(--primary);}
+.schedule-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+.schedule-cell{background:#131b2b;padding:4px;border-radius:6px;min-height:60px;position:relative;}
+.schedule-lesson{background:var(--primary);margin:2px 0;padding:3px 4px;border-radius:4px;font-size:12px;cursor:pointer;}
+.delete-btn{position:absolute;top:2px;right:2px;background:red;border:none;color:white;font-size:10px;border-radius:3px;cursor:pointer;}
+.chat-message{background:#1e40af;padding:4px;margin:2px 0;border-radius:4px;font-size:12px;word-wrap: break-word;}
+.friend{cursor:pointer;padding:3px 5px;border-radius:4px;background:#2563eb;margin:2px 0;}
+@media(max-width:768px){.nav button{flex:100%;}.schedule-grid{grid-template-columns:repeat(1,1fr);}}
 </style>
 </head>
 <body>
@@ -53,161 +59,188 @@ button:hover { background:#2563eb; }
 <div id="admin" class="card hidden"></div>
 
 <script>
-// ------------------- Ranks -------------------
-const RANKS = [
-  {id: 1, name: "[RT] Recruit Training"},
-  {id: 2, name: "[E1] Private"},
-  {id: 3, name: "[E2] Private First Class"},
-  {id: 4, name: "[E3] Lance Corporal"},
-  {id: 5, name: "[E4] Corporal"},
-  {id: 6, name: "[E5] Sergeant"},
-  {id: 7, name: "[E6] Staff Sergeant"},
-  {id: 8, name: "[E7] Gunnery Sergeant"},
-  {id: 9, name: "[E8] Master Sergeant"},
-  {id:10, name: "[E8] First Sergeant"},
-  {id:11, name: "[E9] Master Gunnery Sergeant"},
-  {id:12, name: "[E9] Sergeant Major"},
-  {id:13, name: "[VIP] Very Important Person"},
-  {id:14, name: "[O1] Second Lieutenant"},
-  {id:15, name: "[O2] First Lieutenant"},
-  {id:16, name: "[O3] Captain"},
-  {id:17, name: "[O4] Major"},
-  {id:18, name: "[O5] Lieutenant Colonel"},
-  {id:19, name: "[O6] Colonel"},
-  {id:20, name: "[O7] Brigadier General"},
-  {id:21, name: "[O8] Major General"},
-  {id:22, name: "[O9] Lieutenant General"},
-  {id:23, name: "[O10] General"}
+// ------------------ CONFIG ------------------
+const RANKS=[
+{ id:1, name:"[RT] Recruit Training"},{ id:2, name:"[E1] Private"},{ id:3, name:"[E2] Private First Class"},
+{ id:4, name:"[E3] Lance Corporal"},{ id:5, name:"[E4] Corporal"},{ id:6, name:"[E5] Sergeant"},
+{ id:7, name:"[E6] Staff Sergeant"},{ id:8, name:"[E7] Gunnery Sergeant"},{ id:9, name:"[E8] Master Sergeant"},
+{ id:10, name:"[E8] First Sergeant"},{ id:11, name:"[E9] Master Gunnery Sergeant"},{ id:12, name:"[E9] Sergeant Major"},
+{ id:13, name:"[VIP] Very Important Person"},{ id:14, name:"[O1] Second Lieutenant"},{ id:15, name:"[O2] First Lieutenant"},
+{ id:16, name:"[O3] Captain"},{ id:17, name:"[O4] Major"},{ id:18, name:"[O5] Lieutenant Colonel"},
+{ id:19, name:"[O6] Colonel"},{ id:20, name:"[O7] Brigadier General"},{ id:21, name:"[O8] Major General"},
+{ id:22, name:"[O9] Lieutenant General"},{ id:23, name:"[O10] General"}
 ];
 
-// ------------------- LocalStorage -------------------
-let users = JSON.parse(localStorage.getItem('users')) || {
-  "ADMIN60487753641": {password:"MARC60487753641", role:"Admin", robloxId:"60487753641", rank:23, rankName:"[O10] General", class:"HQ"}
-};
-let schedule = JSON.parse(localStorage.getItem('schedule')) || {};
-let grades = JSON.parse(localStorage.getItem('grades')) || {};
-let messages = JSON.parse(localStorage.getItem('messages')) || [];
-let friends = JSON.parse(localStorage.getItem('friends')) || {};
-let currentUser = null;
-function save(){ 
-  localStorage.setItem('users', JSON.stringify(users));
-  localStorage.setItem('schedule', JSON.stringify(schedule));
-  localStorage.setItem('grades', JSON.stringify(grades));
-  localStorage.setItem('messages', JSON.stringify(messages));
-  localStorage.setItem('friends', JSON.stringify(friends));
+// ------------------ STORAGE ------------------
+let users=JSON.parse(localStorage.getItem('users'))||{"ADMIN":{password:"1234",role:"Admin",robloxId:"60487753641",rank:23,rankName:"[O10] General",class:"HQ"}};
+let schedule=JSON.parse(localStorage.getItem('schedule'))||{};
+let grades=JSON.parse(localStorage.getItem('grades'))||{};
+let messages=JSON.parse(localStorage.getItem('messages'))||[];
+let friends=JSON.parse(localStorage.getItem('friends'))||{};
+let groups=JSON.parse(localStorage.getItem('groups'))||{};
+let notifications=JSON.parse(localStorage.getItem('notifications'))||[];
+let currentUser=null;
+
+// ------------------ SAVE ------------------
+function save(){
+localStorage.setItem('users',JSON.stringify(users));
+localStorage.setItem('schedule',JSON.stringify(schedule));
+localStorage.setItem('grades',JSON.stringify(grades));
+localStorage.setItem('messages',JSON.stringify(messages));
+localStorage.setItem('friends',JSON.stringify(friends));
+localStorage.setItem('groups',JSON.stringify(groups));
+localStorage.setItem('notifications',JSON.stringify(notifications));
 }
 
-// ------------------- Login / Logout -------------------
+// ------------------ LOGIN ------------------
 function login(){
- let u=document.getElementById('loginUser').value;
- let p=document.getElementById('loginPass').value;
- if(users[u] && users[u].password===p){
-   currentUser=u;
-   document.getElementById('login').classList.add('hidden');
-   document.getElementById('app').classList.remove('hidden');
-   loadUI();
- } else alert('Invalid credentials');
+let u=document.getElementById('loginUser').value;
+let p=document.getElementById('loginPass').value;
+if(users[u]&&users[u].password===p){
+currentUser=u;
+document.getElementById('login').classList.add('hidden');
+document.getElementById('app').classList.remove('hidden');
+loadUI();
+}else alert('Invalid credentials');
 }
 function logout(){ location.reload(); }
-function show(id){
- document.querySelectorAll('#app .card').forEach(c=>c.classList.add('hidden'));
- document.getElementById(id).classList.remove('hidden');
-}
+function show(id){ document.querySelectorAll('#app .card').forEach(c=>c.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
 
-// ------------------- Dashboard -------------------
+// ------------------ DASHBOARD ------------------
 function loadUI(){
- let u=users[currentUser];
- document.getElementById('dashboard').innerHTML=`
- <h2>Welcome ${currentUser}</h2>
- <img class="avatar" src="https://www.roblox.com/headshot-thumbnail/image?userId=${u.robloxId}&width=150&height=150&format=png">
- <p>Rank: ${u.rankName}</p>
- <p>Role: ${u.role}</p>
- <p>Class: ${u.class}</p>`;
- if(u.role!=='Admin') document.getElementById('adminBtn').style.display='none';
- if(u.role!=='Trainer') document.getElementById('trainerBtn').style.display='none';
- if(u.role==='Admin') loadAdmin();
- if(u.role==='Trainer') loadTrainerPanel();
+let u=users[currentUser];
+document.getElementById('dashboard').innerHTML=`
+<h2>Welcome ${currentUser}</h2>
+<img class="avatar" src="https://www.roblox.com/headshot-thumbnail/image?userId=${u.robloxId}&width=150&height=150&format=png">
+<p>Rank: ${u.rankName}</p>
+<p>Role: ${u.role}</p>
+<p>Class: ${u.class}</p>
+<p>Friends: ${friends[currentUser]?friends[currentUser].length:0}</p>
+<button onclick="renderSchedule()">Refresh Schedule</button>`;
+if(u.role!=='Admin') document.getElementById('adminBtn').style.display='none';
+if(u.role!=='Trainer') document.getElementById('trainerBtn').style.display='none';
+if(u.role==='Admin') loadAdmin();
+if(u.role==='Trainer') loadTrainerPanel();
+renderSchedule();
+renderGrades();
+renderChat();
 }
 
-// ------------------- Trainer Panel: Lookup + Rank -------------------
+// ------------------ SCHEDULE ------------------
+function renderSchedule(){
+let days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+let grid=document.createElement('div'); grid.className='schedule-grid';
+days.forEach(day=>{
+let cell=document.createElement('div'); cell.className='schedule-cell';
+cell.innerHTML=`<b>${day}</b>`;
+let lessons=(schedule[day]||[]).filter(l=>l.class===users[currentUser].class);
+lessons.forEach((l,idx)=>{
+let lessonDiv=document.createElement('div'); lessonDiv.className='schedule-lesson';
+lessonDiv.textContent=`${l.training} (${l.trainer})`;
+if(l.trainer===currentUser||users[currentUser].role==='Admin'){
+let btn=document.createElement('button'); btn.textContent='x'; btn.className='delete-btn';
+btn.onclick=()=>{ lessons.splice(idx,1); schedule[day]=lessons; save(); renderSchedule(); };
+lessonDiv.appendChild(btn);
+}
+cell.appendChild(lessonDiv);
+});
+grid.appendChild(cell);
+});
+let scheduleDiv=document.getElementById('schedule'); scheduleDiv.innerHTML="<h2>Schedule</h2>"; scheduleDiv.appendChild(grid);
+}
+
+// ------------------ GRADES ------------------
+function renderGrades(){
+let gradesDiv=document.getElementById('grades'); gradesDiv.innerHTML="<h2>Grades</h2>";
+if(!grades[currentUser]){ gradesDiv.innerHTML+="<p>No grades yet.</p>"; return; }
+grades[currentUser].forEach(g=>{
+gradesDiv.innerHTML+=`<p>${g.title} - ${g.score} (${g.attendance}) by ${g.trainer}</p>`;
+});
+}
+
+// ------------------ CHAT ------------------
+function renderChat(){
+let chatDiv=document.getElementById('chat'); chatDiv.innerHTML="<h2>Chat</h2>";
+messages.filter(m=>m.to===currentUser||m.from===currentUser||m.type==='group').forEach(m=>{
+chatDiv.innerHTML+=`<div class="chat-message"><b>${m.from}:</b> ${m.content}</div>`;
+});
+chatDiv.innerHTML+=`<input id="chatInput" placeholder="Type message"><button onclick="sendChat()">Send</button>`;
+}
+function sendChat(){
+let msg=document.getElementById('chatInput').value; if(!msg) return;
+messages.push({from:currentUser,to:'all',content:msg,type:'group',date:new Date().toLocaleString()});
+save(); renderChat();
+}
+
+// ------------------ TRAINER PANEL ------------------
 function loadTrainerPanel(){
- let html = `<h2>Trainer Panel - Rank / Grades</h2>
- <input id="lookupUser" placeholder="Enter username to lookup">
- <button onclick="lookupUser()">Lookup</button>
- <div id="lookupResult"></div>`;
- document.getElementById('trainer').innerHTML=html;
+let html=`<h2>Trainer Panel - Rank / Grades</h2>
+<input id="lookupUser" placeholder="Enter username"><button onclick="lookupUser()">Lookup</button>
+<div id="lookupResult"></div>`;
+document.getElementById('trainer').innerHTML=html;
 }
-
 function lookupUser(){
- let username = document.getElementById('lookupUser').value;
- let u = users[username];
- if(!u){ alert('User not found'); return; }
-
- // Build rank dropdown
- let rankDropdown = `<select id="newRankSelect">`;
- RANKS.forEach(r=>{
-   rankDropdown += `<option value="${r.id}" ${u.rank===r.id?'selected':''}>${r.name}</option>`;
- });
- rankDropdown += `</select>`;
-
- // Grades input
- let gradeInput = `
- <input id="gradeTitleInput" placeholder="Grade Title">
- <input id="gradeScoreInput" placeholder="Score or Good/Bad">
- <input type="checkbox" id="attendanceInput"> Present
- <button onclick="addGrade('${username}')">Add Grade</button>`;
-
- // Send to backend for Roblox group (placeholder fetch)
- let rankBtn = `<button onclick="updateRobloxRank('${username}')">Update Roblox Rank</button>`;
-
- document.getElementById('lookupResult').innerHTML = `
- <p>Username: ${username}</p>
- <p>Current Rank: ${u.rankName}</p>
- <p>Class: ${u.class}</p>
- <p>Change Rank: ${rankDropdown} ${rankBtn}</p>
- ${gradeInput}`;
+let username=document.getElementById('lookupUser').value; let u=users[username];
+if(!u){ alert('User not found'); return; }
+let rankDropdown=`<select id="newRankSelect">`; RANKS.forEach(r=>rankDropdown+=`<option value="${r.id}" ${u.rank===r.id?'selected':''}>${r.name}</option>`); rankDropdown+=`</select>`;
+let gradeInput=`<input id="gradeTitleInput" placeholder="Grade Title"><input id="gradeScoreInput" placeholder="Score / Good-Bad"><input type="checkbox" id="attendanceInput"> Present <button onclick="addGrade('${username}')">Add Grade</button>`;
+let rankBtn=`<button onclick="updateRobloxRank('${username}')">Update Roblox Rank</button>`;
+document.getElementById('lookupResult').innerHTML=`
+<p>Username: ${username}</p>
+<p>Current Rank: ${u.rankName}</p>
+<p>Class: ${u.class}</p>
+<p>Change Rank: ${rankDropdown} ${rankBtn}</p>
+${gradeInput}`;
 }
-
-function updateRobloxRank(username){
- let newRankId = parseInt(document.getElementById('newRankSelect').value);
- let newRankName = RANKS.find(r=>r.id===newRankId).name;
- users[username].rank = newRankId;
- users[username].rankName = newRankName;
- save();
- alert(`${username} rank updated locally. Sending to Roblox group...`);
-
- // Placeholder fetch to backend
- fetch("http://localhost:3000/rank", {
-   method:"POST",
-   headers: {"Content-Type":"application/json"},
-   body: JSON.stringify({
-     robloxId: users[username].robloxId,
-     groupId:6048775,
-     rankId:newRankId
-   })
- })
- .then(res=>res.json())
- .then(data=>alert("Rank updated in Roblox group successfully"))
- .catch(err=>console.error("Error updating Roblox rank", err));
-}
-
-// ------------------- Grades -------------------
 function addGrade(username){
- let title = document.getElementById('gradeTitleInput').value;
- let score = document.getElementById('gradeScoreInput').value;
- let attendance = document.getElementById('attendanceInput').checked?'Present':'Absent';
- if(!grades[username]) grades[username]=[];
- grades[username].push({title, score, attendance, trainer:currentUser, date:new Date().toLocaleDateString()});
- save();
- alert(`Grade added for ${username}`);
+let title=document.getElementById('gradeTitleInput').value;
+let score=document.getElementById('gradeScoreInput').value;
+let attendance=document.getElementById('attendanceInput').checked?'Present':'Absent';
+if(!grades[username]) grades[username]=[];
+grades[username].push({title,score,attendance,trainer:currentUser,date:new Date().toLocaleDateString()});
+save(); alert(`Grade added for ${username}`); renderGrades();
+}
+function updateRobloxRank(username){
+let newRankId=parseInt(document.getElementById('newRankSelect').value);
+let newRankName=RANKS.find(r=>r.id===newRankId).name;
+users[username].rank=newRankId; users[username].rankName=newRankName; save();
+alert(`${username} rank updated locally. Sending to Roblox...`);
+// backend fetch placeholder
+fetch("http://localhost:3000/rank",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({robloxId:users[username].robloxId,groupId:6048775,rankId:newRankId})})
+.then(res=>res.json()).then(data=>alert("Rank updated in Roblox")).catch(err=>console.error(err));
 }
 
-// ------------------- Chat (Basic) -------------------
-function sendMessage(to, content, type='private'){
- messages.push({from:currentUser,to,content,type,date:new Date().toLocaleString()});
- save();
- alert('Message sent');
+// ------------------ ADMIN PANEL ------------------
+function loadAdmin(){
+let html=`<h2>Admin Panel</h2><p>Create Users / Manage Schedule / Groups</p>
+<input id="newUser" placeholder="Username">
+<input id="newPass" placeholder="Password">
+<input id="newRoblox" placeholder="Roblox UserID">
+<input id="newClass" placeholder="Class">
+<select id="newRole"><option>Member</option><option>Trainer</option><option>Admin</option></select>
+<button onclick="addUser()">Create User</button>
+<hr>
+<h3>Groups</h3>
+<input id="groupNameInput" placeholder="New Group Name">
+<button onclick="createGroup()">Create Group</button>
+<ul id="groupList"></ul>
+`;
+document.getElementById('admin').innerHTML=html; renderGroups();
 }
+function addUser(){
+let u=document.getElementById('newUser').value; let p=document.getElementById('newPass').value;
+let r=document.getElementById('newRole').value; let roblox=document.getElementById('newRoblox').value;
+let cls=document.getElementById('newClass').value;
+users[u]={password:p,role:r,robloxId:roblox,rank:1,rankName:RANKS[0].name,class:cls};
+save(); loadAdmin(); alert('User created!');
+}
+function createGroup(){let name=document.getElementById('groupNameInput').value; if(!name) return; groups[name]=[]; save(); renderGroups();}
+function renderGroups(){let list=document.getElementById('groupList'); if(!list) return; list.innerHTML=''; for(let g in groups){ list.innerHTML+=`<li>${g} (Members: ${groups[g].length})</li>`;}}
+
+// ------------------ INITIAL ------------------
+renderSchedule();
+renderGrades();
+renderChat();
 </script>
 </body>
 </html>

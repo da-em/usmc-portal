@@ -42,8 +42,8 @@ button:hover { background:#2563eb; }
 <button onclick="show('grades')">Grades</button>
 <button onclick="show('attendance')">Attendance</button>
 <button onclick="show('chat')">Chat</button>
-<button onclick="show('admin')" id="adminBtn">Admin Panel</button>
 <button onclick="show('trainer')" id="trainerBtn">Trainer Panel</button>
+<button onclick="show('admin')" id="adminBtn">Admin Panel</button>
 <button onclick="logout()">Logout</button>
 </div>
 
@@ -52,18 +52,18 @@ button:hover { background:#2563eb; }
 <div id="grades" class="card hidden"></div>
 <div id="attendance" class="card hidden"></div>
 <div id="chat" class="card hidden"></div>
-<div id="admin" class="card hidden"></div>
 <div id="trainer" class="card hidden"></div>
+<div id="admin" class="card hidden"></div>
 
 <script>
 // ------------------- LocalStorage -------------------
 let users = JSON.parse(localStorage.getItem('users')) || {
   "ADMIN60487753641": {password:"MARC60487753641", role:"Admin", robloxId:"60487753641", rank:"Commander", class:"HQ"}
 };
-let schedule = JSON.parse(localStorage.getItem('schedule')) || {}; // {class:{Monday:[lesson1, lesson2]}}
-let grades = JSON.parse(localStorage.getItem('grades')) || {}; // {username:[{title, score, attendance, trainer, date}]}
-let messages = JSON.parse(localStorage.getItem('messages')) || []; // {from,to,content,type,date,image?}
-let friends = JSON.parse(localStorage.getItem('friends')) || {}; // {username:[friend1,friend2]}
+let schedule = JSON.parse(localStorage.getItem('schedule')) || {};
+let grades = JSON.parse(localStorage.getItem('grades')) || {};
+let messages = JSON.parse(localStorage.getItem('messages')) || [];
+let friends = JSON.parse(localStorage.getItem('friends')) || {};
 let currentUser = null;
 function save(){ 
   localStorage.setItem('users', JSON.stringify(users));
@@ -124,8 +124,8 @@ function displaySchedule(){
    html+=`<div class="schedule-cell"><strong>${day}</strong>`;
    let lessons = regimentSchedule[day]||[];
    lessons.forEach((l,i)=>{
-     html+=`<div class="schedule-lesson">${l.trainingType} ${l.time} <br> Trainer: ${l.trainerUser} (${l.trainerRank}) <br> Location: ${l.location}`;
-     if(users[currentUser].role==='Admin') html+=`<button class="delete-btn" onclick="deleteLesson('${u.class}','${day}',${i})">x</button>`;
+     html+=`<div class="schedule-lesson">${l.trainingType} ${l.time}<br>Trainer: ${l.trainerUser} (${l.trainerRank})<br>Host: ${l.hostRole}<br>Location: ${l.location}`;
+     if(users[currentUser].role==='Admin' || l.trainerUser===currentUser) html+=`<button class="delete-btn" onclick="deleteLesson('${u.class}','${day}',${i})">x</button>`;
      html+=`</div>`;
    });
    html+='</div>';
@@ -136,7 +136,8 @@ function displaySchedule(){
 function nextWeek(){ currentWeekMonday.setDate(currentWeekMonday.getDate()+7); displaySchedule(); }
 function prevWeek(){ currentWeekMonday.setDate(currentWeekMonday.getDate()-7); displaySchedule(); }
 function deleteLesson(cls, day, index){
- if(users[currentUser].role!=='Admin') return;
+ let lesson=schedule[cls][day][index];
+ if(users[currentUser].role!=='Admin' && lesson.trainerUser!==currentUser) return;
  schedule[cls][day].splice(index,1);
  save();
  displaySchedule();
@@ -196,6 +197,7 @@ function loadAdmin(){
  <input id="trainingTime" placeholder="Time (10:00-12:00)">
  <input id="trainerUser" placeholder="Trainer Username">
  <input id="trainerRank" placeholder="Trainer Rank">
+ <select id="hostRole"><option>HOST</option><option>COHOST</option></select>
  <input id="location" placeholder="Location">
  <input id="extraInfo" placeholder="Extra Info">
  <button onclick="addSchedule()">Add Schedule</button>
@@ -224,6 +226,7 @@ function addSchedule(){
    time:document.getElementById('trainingTime').value,
    trainerUser:document.getElementById('trainerUser').value,
    trainerRank:document.getElementById('trainerRank').value,
+   hostRole:document.getElementById('hostRole').value,
    location:document.getElementById('location').value,
    extra:document.getElementById('extraInfo').value
  });

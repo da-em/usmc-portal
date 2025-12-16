@@ -20,6 +20,7 @@ button:hover { background:#2563eb; }
 .schedule-lesson { background:#1d4ed8; margin:2px 0; padding:2px 4px; border-radius:4px; font-size:12px; cursor:pointer; }
 .delete-btn { position:absolute; top:2px; right:2px; background:red; border:none; color:white; font-size:10px; border-radius:3px; cursor:pointer; }
 .chat-message { background:#1e40af; padding:4px; margin:2px 0; border-radius:4px; font-size:12px; word-wrap: break-word; }
+.friend-btn { background:#2563eb; color:white; padding:2px 4px; border-radius:4px; margin-left:5px; font-size:12px; cursor:pointer;}
 @media(max-width:768px){ .nav button{flex:100%;} .schedule-grid { grid-template-columns: repeat(1, 1fr); } }
 </style>
 </head>
@@ -123,8 +124,9 @@ function displaySchedule(){
    html+=`<div class="schedule-cell"><strong>${day}</strong>`;
    let lessons = regimentSchedule[day]||[];
    lessons.forEach((l,i)=>{
-     html+=`<div class="schedule-lesson">${l.trainingType} ${l.time} <br> Trainer: ${l.trainerUser} (${l.trainerRank}) <br> Location: ${l.location} 
-     <button class="delete-btn" onclick="deleteLesson('${u.class}','${day}',${i})">x</button></div>`;
+     html+=`<div class="schedule-lesson">${l.trainingType} ${l.time} <br> Trainer: ${l.trainerUser} (${l.trainerRank}) <br> Location: ${l.location}`;
+     if(users[currentUser].role==='Admin') html+=`<button class="delete-btn" onclick="deleteLesson('${u.class}','${day}',${i})">x</button>`;
+     html+=`</div>`;
    });
    html+='</div>';
  });
@@ -134,6 +136,7 @@ function displaySchedule(){
 function nextWeek(){ currentWeekMonday.setDate(currentWeekMonday.getDate()+7); displaySchedule(); }
 function prevWeek(){ currentWeekMonday.setDate(currentWeekMonday.getDate()-7); displaySchedule(); }
 function deleteLesson(cls, day, index){
+ if(users[currentUser].role!=='Admin') return;
  schedule[cls][day].splice(index,1);
  save();
  displaySchedule();
@@ -232,7 +235,6 @@ function loadTrainerPanel(){
  let u=users[currentUser];
  let students=Object.keys(users).filter(s=>users[s].role==='Member' && users[s].class===u.class);
  let html='<h2>Trainer Panel</h2>';
- html+=`Group ID: <input id="groupIdInput" value="6048775" />`;
  students.forEach(s=>{
    html+=`<p>${s} - Current Rank: ${users[s].rank}</p>
    <select id="rankSelect_${s}"><option value="200">Private</option><option value="300">Corporal</option><option value="400">Sergeant</option><option value="500">Lieutenant</option></select>
@@ -248,7 +250,6 @@ function loadTrainerPanel(){
 function updateRank(username){
  let student=users[username];
  let rankId=parseInt(document.getElementById(`rankSelect_${username}`).value);
- let groupId=parseInt(document.getElementById('groupIdInput').value);
  student.rank=rankId; save(); loadTrainerPanel(); alert(`${username} rank updated`);
 }
 
